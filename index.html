@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PixelEdit</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="toolbar" class="panel" aria-label="toolbar"></div>
+      <div id="center">
+        <div id="canvas-wrap">
+          <canvas id="grid-canvas" width="512" height="512"></canvas>
+          <canvas id="main-canvas" width="512" height="512"></canvas>
+        </div>
+        <div id="palette-area">
+          <div id="palette" class="swatch-row"></div>
+          <div id="presets" class="preset-row"></div>
+        </div>
+      </div>
+      <div id="layers" class="panel" aria-label="layers"></div>
+      <div id="filmstrip-area" class="panel">
+        <div id="anim-controls"></div>
+        <div id="filmstrip" class="frame-row"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
