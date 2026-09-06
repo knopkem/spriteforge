@@ -1,55 +1,101 @@
-# PixelEdit
+# SpriteForge
 
-A browser-based pixel art editor for retro game assets, built with a 32×32 canvas at 16× display scale. Vanilla TypeScript + Vite, no UI framework.
+A browser-based animated pixel-art sprite studio: draw frames, manage a palette
+and layers, preview the animation, and export to PNG, animated GIF, or a
+sprite-sheet — or save the whole project to a `.spriteforge` file. It is a
+single-page app that runs entirely offline with no network calls.
 
-## Features
-
-- **Canvas & drawing** — 32×32 canvas shown at 512×512 on a dark UI; pencil (left-draw / right-erase) with 1px/2px brush; flood-fill bucket; unlimited undo/redo.
-- **Color & palette** — fixed 16-color palette with active-slot indicator and warm / cool / grayscale presets. The eyedropper samples the visible composite and writes the color into the active slot.
-- **Layers** — background / midground / foreground with visibility toggles, selection, per-layer opacity, and a source-over composite preview.
-- **Animation** — 4 frames with filmstrip thumbnails, onion skin (previous frame at 30% ghost), and 4 FPS play/pause.
-- **Export** — current frame as a 32×32 PNG; full animation as a GIF (4 frames @ 250 ms) via [`gifenc`](https://www.npmjs.com/package/gifenc).
+Built with **TypeScript + Vite + vanilla DOM**. The only runtime dependency is
+[`gifenc`](https://github.com/mattdesl/gifenc) for GIF encoding (see
+[`DECISIONS.md`](./DECISIONS.md)).
 
 ## Quick start
 
 ```bash
-npm install
-npm run dev      # start dev server
-npm test         # run the vitest suite
-npm run build    # typecheck + production build (dist/)
+npm install       # install dependencies
+npm run dev       # start the Vite dev server (http://localhost:5173)
 ```
 
-## Keyboard & mouse
+Open the printed URL. Click the canvas, then start drawing.
 
-| Action | Input |
-| --- | --- |
-| Draw / erase | Left / right click (pencil) |
-| Fill, pick color | Click with bucket / eyedropper tool |
-| Undo / Redo | `Ctrl+Z` / `Ctrl+Shift+Z` (or `Ctrl+Y`) |
+## Scripts
 
-## Architecture
+| Command             | What it does                                             |
+| ------------------- | -------------------------------------------------------- |
+| `npm run dev`       | Dev server with HMR                                      |
+| `npm run build`     | `tsc --noEmit` typecheck, then `vite build` → `dist/`    |
+| `npm run preview`   | Serve the production build in `dist/`                    |
+| `npm test`          | Run the Vitest suite once (`vitest run`)                 |
+| `npm run test:watch`| Run Vitest in watch mode                                 |
+| `npm run typecheck` | Type-check the whole project without emitting            |
 
-Rendering and DOM live in a thin layer; all drawing/color logic is pure and unit-tested.
+All three required gates — `build`, `test`, `typecheck` — are wired and green.
+
+## Features
+
+- **Canvas & drawing** — 32×32 canvas upscaled to 512×512 with nearest-neighbor
+  rendering. Pencil (left-click draw / right-click erase) with 1px and 2px
+  brushes, line, rectangle, and ellipse with live drag preview, bucket fill,
+  and eyedropper. Unlimited undo/redo.
+- **Palette** — 16-color default palette plus switchable presets, a native
+  color picker, add/remove/reorder of swatches, and a per-document palette that
+  is saved with the project.
+- **Layers** — four layers by default; add, delete, rename (double-click),
+  reorder, per-layer visibility and 0–100% opacity with live compositing. The
+  panel lists the topmost layer first.
+- **Frames & animation** — up to 64 frames in an editable filmstrip; add,
+  duplicate, delete, reorder; per-frame hold duration, configurable FPS, loop
+  toggle, play/pause/stop/step controls, scrubbing, and onion-skinning of the
+  previous frame.
+- **Import & export** — import a PNG (file picker or drag-and-drop) into the
+  active layer/frame with automatic downscale + palette quantization; export the
+  current frame as a 32×32 or 512×512 PNG; export the animation as an animated
+  GIF honoring per-frame durations; export a row-major sprite-sheet PNG with
+  0/1/2px padding; save/load the whole project losslessly.
+- **Persistence** — autosaves to `localStorage` at most every 5 seconds and
+  restores on reload; a **New** action clears the project.
+
+See [`USERGUIDE.md`](./USERGUIDE.md) for a walkthrough of every feature and
+keyboard shortcut.
+
+## Project format
+
+`.spriteforge` files are JSON: a `format: "spriteforge"`, `version: 1` envelope
+around the full document state (palette, tool settings, layer metadata, and
+frames), with each cel's indexed pixels RLE-compressed as `[value, runLength]`
+pairs. The round-trip is lossless for pixels, palette, layers, frame order,
+durations, and tool settings. See `src/io/project.ts` and `src/io/rle.ts`.
+
+## Layout
 
 ```
+index.html            app shell
 src/
-  types.ts            # core model (Layer, Frame, Document)
-  logic/              # pure, testable logic
-    pixels.ts         # RGBA <-> packed-pixel helpers
-    floodFill.ts      # region fill
-    pencil.ts         # brush stamping
-    compose.ts        # layer compositing + eyedropper sampling
-    onionSkin.ts      # previous-frame ghost blending
-    palettes.ts       # 16-color presets
-  state/              # document factory + snapshot undo/redo
-  render/             # canvas painting (nearest-neighbour scaling)
-  export/             # PNG and GIF (gifenc)
-  editor.ts           # editor controller wiring UI to logic
-test/                 # vitest specs for the logic/state modules
+  main.ts             app controller: wires DOM, tools, panels, export, autosave
+  model/              pure, DOM-free state & logic (unit tested)
+    types.ts          DocState, constants, presets, initial state
+    geometry.ts       line/rect/ellipse/range, flood fill, brush shapes
+    composite.ts      layer/frame compositing to RGBA
+    color.ts          hex/rgb conversion, palette matching
+    document.ts       Document (all mutations) + History + preserveView()
+  io/                 serialization & image codecs (unit tested)
+    rle.ts            run-length encode/decode of cels
+    project.ts        .spriteforge serialize/deserialize
+    spritesheet.ts    row-major grid layout
+    gif.ts            animated GIF via gifenc
+    import.ts         nearest resample + palette quantization
+  ui/                 thin browser glue (exempt from unit tests)
+    render.ts         display + thumbnail compositing/scaling
+    playback.ts       frame timeline playback
+    autosave.ts       throttled localStorage persistence
+    png.ts            canvas → PNG/GIF blobs + downloads
+  types/gifenc.d.ts   type shim for the untyped gifenc dependency
 ```
 
-Pixels are stored per layer as a `Uint32Array` packed as `0xAABBGGRR`, matching `ImageData`'s little-endian layout for direct compositing.
+## Testing
 
-## Tech
-
-TypeScript, Vite, HTML5 Canvas, vanilla DOM. `gifenc` is the only runtime dependency. Themed with the Catppuccin Mocha palette.
+The pure model and I/O layers are covered by Vitest (69 tests across
+`src/model/*` and `src/io/*`): geometry, compositing, color math, the document
+model incl. undo/redo + view preservation, RLE, project round-trip,
+spritesheet layout, GIF encoding, and import quantization. UI glue is exempt per
+the spec.

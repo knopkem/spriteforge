@@ -1,0 +1,46 @@
+{
+  "run": 1,
+  "dir": "/Users/macair/projects/s2-bare-runs/run-01-2026-09-03T16-37-08",
+  "sessionId": "ses_f97de6018ffe3j6uMgVf0VLKOy",
+  "steps": 144,
+  "toolCalls": 140,
+  "toolCensus": {
+    "bash": 28,
+    "read": 17,
+    "todowrite": 3,
+    "write": 35,
+    "edit": 21,
+    "chrome-devtools_new_page": 1,
+    "chrome-devtools_list_console_messages": 5,
+    "chrome-devtools_list_network_requests": 1,
+    "chrome-devtools_evaluate_script": 12,
+    "chrome-devtools_take_snapshot": 4,
+    "chrome-devtools_click": 6,
+    "chrome-devtools_press_key": 3,
+    "chrome-devtools_navigate_page": 3,
+    "invalid": 1
+  },
+  "tokens": {
+    "input": 7111369,
+    "output": 97120,
+    "cacheRead": 0,
+    "cacheWrite": 0
+  },
+  "peakInputTokens": 70090,
+  "errorEvents": [],
+  "eventTypeCensus": {
+    "step_start": 144,
+    "text": 147,
+    "tool_use": 140,
+    "step_finish": 144
+  },
+  "compactishLines": 6,
+  "streamSpanSec": 4525,
+  "status": "completed",
+  "lastExitCode": 0,
+  "invocations": 1,
+  "nudges": 0,
+  "startedAt": "2026-09-03T16:37:08.784Z",
+  "endedAt": "2026-09-03T17:52:50.295Z",
+  "wallSec": 4542
+}

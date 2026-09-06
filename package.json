@@ -1,13 +1,16 @@
 {
-  "name": "pixeledit-full",
+  "name": "spriteforge",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "SpriteForge — a browser-based animated pixel-art sprite studio.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "gifenc": "^1.0.3"

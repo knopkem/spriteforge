@@ -3,27 +3,125 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PixelEdit</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2 2'%3E%3Crect width='1' height='1' fill='%237f80f4'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23e43b44'/%3E%3C/svg%3E" />
+    <title>SpriteForge</title>
+    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <div id="app">
-      <div id="toolbar" class="panel" aria-label="toolbar"></div>
-      <div id="center">
-        <div id="canvas-wrap">
-          <canvas id="grid-canvas" width="512" height="512"></canvas>
-          <canvas id="main-canvas" width="512" height="512"></canvas>
-        </div>
-        <div id="palette-area">
-          <div id="palette" class="swatch-row"></div>
-          <div id="presets" class="preset-row"></div>
-        </div>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">▦</span> SpriteForge
       </div>
-      <div id="layers" class="panel" aria-label="layers"></div>
-      <div id="filmstrip-area" class="panel">
-        <div id="anim-controls"></div>
-        <div id="filmstrip" class="frame-row"></div>
+      <div class="file-actions">
+        <button id="btn-new" title="Clear the project">New</button>
+        <button id="btn-save" title="Save project (.spriteforge)">Save</button>
+        <button id="btn-load" title="Load project (.spriteforge)">Load</button>
+        <span class="sep"></span>
+        <button id="btn-import-png" title="Import a PNG into the active layer/frame">Import PNG</button>
+        <span class="sep"></span>
+        <button id="btn-export-png32" title="Export current frame as 32×32 PNG">PNG 32</button>
+        <button id="btn-export-png512" title="Export current frame as 512×512 PNG">PNG 512</button>
+        <label class="mini pad" title="Spritesheet padding between cells">Pad
+          <select id="sheet-padding">
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+          </select>
+        </label>
+        <button id="btn-export-sheet" title="Export a sprite-sheet PNG">Spritesheet</button>
+        <button id="btn-export-gif" title="Export the animation as an animated GIF">GIF</button>
       </div>
-    </div>
+      <div class="status" id="status"></div>
+    </header>
+
+    <main class="layout">
+      <section class="canvas-area" id="canvas-area" tabindex="0">
+        <canvas id="canvas" width="512" height="512"></canvas>
+        <div class="canvas-hint" id="canvas-hint">Click the canvas, then press B / L / R / O / G / I to pick tools</div>
+      </section>
+
+      <section class="filmstrip-area">
+        <div class="playback">
+          <button id="btn-stop" title="Stop">■</button>
+          <button id="btn-back" title="Step back">⏮</button>
+          <button id="btn-play" title="Play / Pause">▶</button>
+          <button id="btn-forward" title="Step forward">⏭</button>
+          <label class="mini">FPS
+            <input id="fps" type="number" min="1" max="24" value="8" />
+          </label>
+          <label class="mini">Loop
+            <input id="loop" type="checkbox" checked />
+          </label>
+          <span class="frame-readout" id="frame-readout">1 / 1</span>
+        </div>
+        <div class="filmstrip" id="filmstrip"></div>
+        <div class="filmstrip-tools">
+          <button id="btn-frame-add">Add frame</button>
+          <button id="btn-frame-dup">Duplicate</button>
+          <button id="btn-frame-del">Delete</button>
+          <button id="btn-frame-left">◀ Move</button>
+          <button id="btn-frame-right">Move ▶</button>
+          <label class="mini">Hold
+            <input id="duration" type="number" min="1" max="24" value="4" />
+          </label>
+          <label class="mini">Onion
+            <input id="onion" type="checkbox" />
+          </label>
+          <label class="mini">Onion α
+            <input id="onion-opacity" type="range" min="0" max="100" value="30" />
+          </label>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <div class="panel">
+          <h3>Tools</h3>
+          <div class="tools" id="tools"></div>
+          <div class="row">
+            <span>Brush</span>
+            <div class="seg" id="brush-seg">
+              <button data-size="1">1px</button>
+              <button data-size="2">2px</button>
+            </div>
+            <span class="kbd">[ / ]</span>
+          </div>
+          <div class="row">
+            <button id="btn-undo" title="Ctrl+Z">Undo</button>
+            <button id="btn-redo" title="Ctrl+Shift+Z">Redo</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Palette</h3>
+          <div class="palette-current">
+            <div class="active-swatch" id="active-swatch" title="Active color"></div>
+            <input type="color" id="color-picker" value="#000000" title="Pick a custom color" />
+            <button id="btn-add-color" title="Add the picked color to the palette">Add</button>
+            <span class="mini" title="Move the active color within the palette">
+              <button id="btn-palette-left" title="Move active color left">◀</button>
+              <button id="btn-palette-right" title="Move active color right">▶</button>
+            </span>
+            <select id="preset-select" title="Palette preset"></select>
+          </div>
+          <div class="palette-grid" id="palette-grid"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Layers <span class="count" id="layer-count"></span></h3>
+          <div class="layers" id="layers"></div>
+          <div class="row">
+            <button id="btn-layer-add">Add</button>
+            <button id="btn-layer-del">Delete</button>
+            <button id="btn-layer-up">▲</button>
+            <button id="btn-layer-down">▼</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <input type="file" id="file-import-png" accept="image/png,image/*" hidden />
+    <input type="file" id="file-load" accept=".spriteforge,application/json" hidden />
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
